@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GroVER",
+  title: "GRoVER",
   description: "Graphical Representation of Verified References",
   icons: "/favicon/favicon.ico" 
 };
