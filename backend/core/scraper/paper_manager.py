@@ -6,8 +6,10 @@ from pypdf import PdfReader
 import google.generativeai as genai
 import re
 import os
+from core.utils.singleton import singleton
 
 
+@singleton
 class PaperManager:
     def __init__(self):
         GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
