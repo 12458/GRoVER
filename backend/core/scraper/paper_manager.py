@@ -28,21 +28,18 @@ class PaperManager:
                 break
         return result
 
-    def get_doi(self, title: str, author: str, journal: str) -> str | None:
+    def get_doi(self, bibtex: str) -> str | None:
         """
-        Get the DOI of a paper using the title, author, and journal.
+        Get the DOI of a paper using the BibTeX information.
 
         Args:
-            title (str): The title of the paper.
-            author (str): The author of the paper.
-            journal (str): The journal of the paper.
+            bibtex (str): The BibTeX information of the paper.
 
         Returns:
             str | None: The DOI (Digital Object Identifier) of the found paper, or None if no paper is found.
         """
-        work = self.works.query(
-            bibliographic=title, author=author, publisher_name=journal
-        )
+
+        work = self.works.query(bibliographic=bibtex)
         for item in work:
             print(item)
             return item["DOI"]
@@ -61,15 +58,26 @@ class PaperManager:
         scihub_download(doi, paper_type="doi", out=f"/tmp/{doi}.pdf")
         return f"/tmp/{doi}.pdf"
 
+    def get_bibtex(self, paper: Any) -> str:
+        """
+        Get the BibTeX information of a paper.
+
+        Args:
+            paper (Any): The paper object.
+
+        Returns:
+            str: The BibTeX information of the paper.
+        """
+        return scholarly.bibtex(paper)
+
 
 if __name__ == "__main__":
     pm = PaperManager()
     papers = pm.search_paper("Deep Learning")
-    print(papers[0])
+    bibtex = scholarly.bibtex(papers[0])
+    print(bibtex)
     doi = pm.get_doi(
-        papers[0]["bib"]["title"],
-        papers[0]["bib"]["author"],
-        papers[0]["bib"]["venue"],
+        bibtex=bibtex,
     )
     path = pm.download_paper(doi)
     print(path)
