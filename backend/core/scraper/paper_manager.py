@@ -2,11 +2,18 @@ from typing import Any
 from scholarly import scholarly
 from crossref.restful import Works
 from scidownl import scihub_download
+from pypdf import PdfReader
+import google.generativeai as genai
+import re
+import os
 
 
 class PaperManager:
     def __init__(self):
+        GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+        genai.configure(api_key=GOOGLE_API_KEY)
         self.works = Works()
+        self.model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest")
 
     def search_paper(self, q: str, limit: int = 20) -> str | None:
         """
@@ -69,6 +76,45 @@ class PaperManager:
             str: The BibTeX information of the paper.
         """
         return scholarly.bibtex(paper)
+
+    def summarise_paper(self, text: str) -> str:
+        """
+        Summarise the content of a paper.
+
+        Args:
+            text (str): The text of the paper to be summarised.
+
+        Returns:
+            str: The summarised content of the paper.
+        """
+
+        sys_prompt = r"""
+Provide a comprehensive summary of the given text. The summary should cover all the key points and main ideas presented in the original text, while also condensing the information into a concise and easy-to-understand format. Please ensure that the summary includes relevant details and examples that support the main ideas, while avoiding any unnecessary information or repetition. The length of the summary should be appropriate for the length and complexity of the original text, providing a clear and accurate overview without omitting any important information. The text to summarise is delimited by backticks (```). Delimit the summarised text with curly brackets {SUMMARISED_TEXT}.
+"""
+
+        response = self.model.generate_content([sys_prompt, "```" + text + "```"])
+        return response.text
+
+    @staticmethod
+    def extract_text_from_pdf(pdf_path: str) -> str:
+        text = ""
+        try:
+            with open(pdf_path, "rb") as file:
+                reader = PdfReader(file)
+                for page_num in range(reader.get_num_pages()):
+                    page = reader.pages[page_num]
+                    text += page.extract_text()
+        except Exception as e:
+            print(f"Error reading PDF file: {e}")
+        return text
+
+    @staticmethod
+    def extract_response(text):
+        pattern = r"\{([^}]*)\}"
+        response = re.search(pattern, text)
+        if response:
+            return response.group(1)
+        return None
 
 
 if __name__ == "__main__":
