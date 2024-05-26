@@ -95,6 +95,20 @@ Provide a comprehensive summary of the given text. The summary should cover all 
         response = self.model.generate_content([sys_prompt, "```" + text + "```"])
         return response.text
 
+    def get_paper_citations(self, doi: str) -> tuple[dict, int]:
+        """
+        Get the number of citations of a paper using the provided DOI.
+
+        Args:
+            doi (str): The DOI (Digital Object Identifier) of the paper.
+
+        Returns:
+            tuple[dict, int]: A tuple containing a dictionary of references and the number of citations of the paper.
+        """
+        work = self.works.query(bibliographic=doi)
+        for item in work:
+            return item["reference"], item["is-referenced-by-count"]
+
     @staticmethod
     def extract_text_from_pdf(pdf_path: str) -> str:
         text = ""
